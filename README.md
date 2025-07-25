@@ -1,2 +1,2 @@
 # ehr-project
-LLM Project for enhance applicant tracking system
+LLM-enhanced Applicant Tracking System (ATS)
