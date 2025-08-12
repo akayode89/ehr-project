@@ -1,0 +1,136 @@
+resources:
+  jobs:
+    ats_data_processing:
+      name: ats_data_processing
+      tasks:
+        - task_key: Ingest_Profile_to_Src
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/Profile_Ingestion
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: Injest_JD_to_Src
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/JD_Ingestion
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: JD_Source_to_Bronze
+          depends_on:
+            - task_key: Injest_JD_to_Src
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/JD_Source_to_Bronze
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: JD_Bronze_to_Silver
+          depends_on:
+            - task_key: JD_Source_to_Bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/JD_Bronze_to_Silver
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: Profile_Source_to_Bronze
+          depends_on:
+            - task_key: Ingest_Profile_to_Src
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/Profile_Source_to_Bronze
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: Profile_Bronze_to_Silver
+          depends_on:
+            - task_key: Profile_Source_to_Bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/Profile_Bronze_to_Silver
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: Profile_Index_Sync
+          depends_on:
+            - task_key: Profile_Bronze_to_Silver
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/Profile_Silver_Indexing
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+        - task_key: Profile_JD_Matching_Summary
+          depends_on:
+            - task_key: JD_Bronze_to_Silver
+            - task_key: Profile_Index_Sync
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/Profile_JD_Matching_gl
+            source: WORKSPACE
+          job_cluster_key: Job_cluster
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+            - pypi:
+                package: pymupdf==1.24.13
+            - pypi:
+                package: pymupdf4llm==0.0.5
+      job_clusters:
+        - job_cluster_key: Job_cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 16.4.x-scala2.13
+            azure_attributes:
+              first_on_demand: 1
+              spot_bid_max_price: -1
+            node_type_id: Standard_DS3_v2
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            data_security_mode: DATA_SECURITY_MODE_DEDICATED
+            runtime_engine: STANDARD
+            kind: CLASSIC_PREVIEW
+            is_single_node: true
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: ${var.target_catalog}
+        - name: db
+          default: ${var.target_db}

@@ -1,0 +1,33 @@
+resources:
+  jobs:
+    test_cleanup:
+      name: test_cleanup
+      tasks:
+        - task_key: execute_test_cleanup
+          notebook_task:
+            notebook_path: /Workspace/Users/ajkayode@outlook.com/ehr-project/ehr-project-bundle/source/env_cleanup
+            source: WORKSPACE
+          job_cluster_key: exec_test_cleanup
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+      job_clusters:
+        - job_cluster_key: exec_test_cleanup
+          new_cluster:
+            cluster_name: ""
+            spark_version: 17.0.x-scala2.13
+            node_type_id: Standard_DS3_v2
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            data_security_mode: DATA_SECURITY_MODE_DEDICATED
+            runtime_engine: STANDARD
+            kind: CLASSIC_PREVIEW
+            use_ml_runtime: true
+            is_single_node: true
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: ${var.target_catalog}
+        - name: db
+          default: ${var.target_db}
